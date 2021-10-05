@@ -1,7 +1,6 @@
 <!-- @format -->
 
-# Data points charting widget [<img width="35" src="https://user-images.githubusercontent.com/67993842/97668428-f360cc80-1aa7-11eb-8801-da578bda4334.png"/>]
-
+# Data points charting widget
 The Data Points Charting Widget allows you to create real time graphs showing customizable amounts of data from one or more devices.
 
 ## Fork
