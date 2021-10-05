@@ -41,7 +41,7 @@ import { ChartsModule } from "ng2-charts";
                 description: "Graph measurements and statistics about measurements",
                 component: CumulocityDatapointsChartingWidget,
                 configComponent: CumulocityDatapointsChartingWidgetConfig,
-                previewImage: require("@widget-assets/img-preview.png"),
+                previewImage: require("./assets/img-preview.png"),
                 data: {
                     ng1: {
                         options: { noDeviceTarget: true, noNewWidgets: false, deviceTargetNotRequired: true, groupsSelectable: true },
