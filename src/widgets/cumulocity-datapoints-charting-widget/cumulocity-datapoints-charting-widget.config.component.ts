@@ -76,7 +76,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (this.widgetHelper.getDeviceTarget()) {
             let { data, res } = await this.getDeviceDetail(this.widgetHelper.getDeviceTarget());
             if (res.status >= 200 && res.status < 300) {
-                let v: RawListItem = { id: data.id, text: data.name, isGroup: false };
+                let v: RawListItem = { id: data.id, text: data.name, isGroup: data.hasOwnProperty('c8y_IsDeviceGroup') };
                 this.widgetHelper.getWidgetConfig().selectedDevices = [v];
             } else {
                 this.alertService.danger(`There was an issue getting device details, please refresh the page.`);
