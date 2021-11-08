@@ -12,10 +12,10 @@
  * @format
  */
 
-import { has, set, get } from "lodash";
-import { v4 as uuidv4 } from "uuid";
-import { ChartConfig } from "./widget-charts";
-import { MeasurementHelper } from "./widget-measurements";
+import { has, set, get } from 'lodash';
+import { v4 as uuidv4 } from 'uuid';
+import { ChartConfig } from './widget-charts';
+import { MeasurementHelper } from './widget-measurements';
 
 /**
  * The C8Y process has a standard member "config". This member has
@@ -30,106 +30,106 @@ import { MeasurementHelper } from "./widget-measurements";
  * The CONFIGTYPE generic is the class of WidgetConfig (or extended type TBD)
  */
 export class WidgetHelper<CONFIGTYPE> {
-    /**
-     * The following 2 members are for checking types
-     * do not store data in these!!!!
-     */
-    private reference: CONFIGTYPE;
-    private chartRef: ChartConfig;
+  /**
+   * The following 2 members are for checking types
+   * do not store data in these!!!!
+   */
+  private reference: CONFIGTYPE;
+  private chartRef: ChartConfig;
 
-    /**
-     *  member that holds the actual data
-     */
-    private config: CONFIGTYPE;
-    private measurements: MeasurementHelper;
-    private rawConfig: any;
+  /**
+   *  member that holds the actual data
+   */
+  private config: CONFIGTYPE;
+  private measurements: MeasurementHelper;
+  private rawConfig: any;
 
-    /**
-     *
-     * E.G. let h = new WidgetHelper(config, MyConfigType); // type argument inference
-     *
-     * @param c is the configuration member supplied by default
-     * @param ConfigCreator The type of the Custom Widget Class
-     */
-    constructor(c: Object, ConfigCreator: new () => CONFIGTYPE) {
-        this.rawConfig = c;
-        this.reference = new ConfigCreator(); //template
-        this.chartRef = new ChartConfig(); //NOT for data
+  /**
+   *
+   * E.G. let h = new WidgetHelper(config, MyConfigType); // type argument inference
+   *
+   * @param c is the configuration member supplied by default
+   * @param ConfigCreator The type of the Custom Widget Class
+   */
+  constructor(c: Object, ConfigCreator: new () => CONFIGTYPE) {
+    this.rawConfig = c;
+    this.reference = new ConfigCreator(); //template
+    this.chartRef = new ChartConfig(); //NOT for data
 
-        // only set if it doesn't exist
-        if (!has(c, "customwidgetdata")) {
-            this.config = new ConfigCreator();
-        } else {
-            // because this is stored and retrieved from mongo db
-            // reset the prototype and leave the data
-            this.config = get(c, "customwidgetdata");
-            if (Object.getPrototypeOf(this.config) !== Object.getPrototypeOf(this.reference)) {
-                Object.setPrototypeOf(this.config, Object.getPrototypeOf(this.reference));
-            }
-        }
+    // only set if it doesn't exist
+    if (!has(c, 'customwidgetdata')) {
+      this.config = new ConfigCreator();
+    } else {
+      // because this is stored and retrieved from mongo db
+      // reset the prototype and leave the data
+      this.config = get(c, 'customwidgetdata');
+      if (Object.getPrototypeOf(this.config) !== Object.getPrototypeOf(this.reference)) {
+        Object.setPrototypeOf(this.config, Object.getPrototypeOf(this.reference));
+      }
     }
+  }
 
-    getDeviceTarget(): string | undefined {
-        if (has(this.rawConfig, "device")) {
-            return this.rawConfig["device"].id;
-        } else if (has(this.rawConfig, "settings")) {
-            if (has(this.rawConfig["settings"], "context")) {
-                return this.rawConfig["settings"]["context"].id;
-            }
-        }
-        return undefined;
+  getDeviceTarget(): string | undefined {
+    if (has(this.rawConfig, 'device')) {
+      return this.rawConfig['device'].id;
+    } else if (has(this.rawConfig, 'settings')) {
+      if (has(this.rawConfig['settings'], 'context')) {
+        return this.rawConfig['settings']['context'].id;
+      }
     }
+    return undefined;
+  }
 
-    /**
-     * Use this member when accessing the configuration data
-     *
-     * @returns a reference to the widgets configuration with class methods
-     */
-    getWidgetConfig(): CONFIGTYPE {
-        return this.config;
-    }
+  /**
+   * Use this member when accessing the configuration data
+   *
+   * @returns a reference to the widgets configuration with class methods
+   */
+  getWidgetConfig(): CONFIGTYPE {
+    return this.config;
+  }
 
-    /**
-     * Set the customwidgetdata member with the current config
-     * typically call this when updating the config in a form
-     *
-     * @param c config member from the custom widget
-     */
-    setWidgetConfig(c: any) {
-        set(c, "customwidgetdata", this.config);
-    }
+  /**
+   * Set the customwidgetdata member with the current config
+   * typically call this when updating the config in a form
+   *
+   * @param c config member from the custom widget
+   */
+  setWidgetConfig(c: any) {
+    set(c, 'customwidgetdata', this.config);
+  }
 
-    getUniqueID(): string {
-        if (!has(this.config, "uuid")) {
-            set(this.config as any, "uuid", uuidv4());
-        }
-        return get(this.config, "uuid");
+  getUniqueID(): string {
+    if (!has(this.config, 'uuid')) {
+      set(this.config as any, 'uuid', uuidv4());
     }
+    return get(this.config, 'uuid');
+  }
 
-/**
- * If an object exists it will be returned with the correct prototype
- * If it doesn't it will be created and a default returned.
- *
- * @returns Chart config object attached to the general configuration
- */
-    getChartConfig(): ChartConfig {
-        if (has(this.config, "chart")) {
-            const chartConfig: ChartConfig = get(this.config, "chart");
-            if (Object.getPrototypeOf(chartConfig) !== Object.getPrototypeOf(this.chartRef)) {
-                Object.setPrototypeOf(chartConfig, Object.getPrototypeOf(this.chartRef));
-            }
-            return chartConfig;
-        } else {
-            //add new ? or perhaps throw if we get more serious
-            const cfg = set(this.config as any, "chart", new ChartConfig());
-            return cfg.chart;
-        }
+  /**
+   * If an object exists it will be returned with the correct prototype
+   * If it doesn't it will be created and a default returned.
+   *
+   * @returns Chart config object attached to the general configuration
+   */
+  getChartConfig(): ChartConfig {
+    if (has(this.config, 'chart')) {
+      const chartConfig: ChartConfig = get(this.config, 'chart');
+      if (Object.getPrototypeOf(chartConfig) !== Object.getPrototypeOf(this.chartRef)) {
+        Object.setPrototypeOf(chartConfig, Object.getPrototypeOf(this.chartRef));
+      }
+      return chartConfig;
+    } else {
+      //add new ? or perhaps throw if we get more serious
+      const cfg = set(this.config, 'chart', new ChartConfig());
+      return cfg.chart;
     }
+  }
 
-    getMeasurements(): MeasurementHelper {
-        if (!this.measurements) {
-            this.measurements = new MeasurementHelper();
-        }
-        return this.measurements;
+  getMeasurements(): MeasurementHelper {
+    if (!this.measurements) {
+      this.measurements = new MeasurementHelper();
     }
+    return this.measurements;
+  }
 }
