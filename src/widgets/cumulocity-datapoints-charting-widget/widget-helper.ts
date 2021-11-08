@@ -106,24 +106,24 @@ export class WidgetHelper<CONFIGTYPE> {
         return get(this.config, "uuid");
     }
 
-    /**
+/**
  * If an object exists it will be returned with the correct prototype
  * If it doesn't it will be created and a default returned.
  *
  * @returns Chart config object attached to the general configuration
  */
     getChartConfig(): ChartConfig {
-        let chartConfig: ChartConfig;
         if (has(this.config, "chart")) {
-            chartConfig = get(this.config, "chart");
+            const chartConfig: ChartConfig = get(this.config, "chart");
             if (Object.getPrototypeOf(chartConfig) !== Object.getPrototypeOf(this.chartRef)) {
                 Object.setPrototypeOf(chartConfig, Object.getPrototypeOf(this.chartRef));
             }
+            return chartConfig;
         } else {
             //add new ? or perhaps throw if we get more serious
-            chartConfig = set(this.config as any, "chart", new ChartConfig());
+            const cfg = set(this.config as any, "chart", new ChartConfig());
+            return cfg.chart;
         }
-        return chartConfig;
     }
 
     getMeasurements(): MeasurementHelper {

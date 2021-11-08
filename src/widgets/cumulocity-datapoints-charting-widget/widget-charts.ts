@@ -285,11 +285,11 @@ export class ChartConfig {
      */
     addSeries(devices: string[], seriesName: string, seriesColor: string, altColor: string, memberOf: string = "default", isParent: boolean = false) {
         if (!isParent) {
-            if (has(this.series, devices[0])) {
+            if (!has(this.series, devices[0])) {
                 this.series[devices[0]] = new ChartSeries(devices, seriesName, seriesColor, altColor, memberOf, isParent);
             }
         } else {
-            if (has(this.series, seriesName)) {
+            if (!has(this.series, seriesName)) {
                 this.series[seriesName] = new ChartSeries(devices, seriesName, seriesColor, altColor, memberOf, isParent);
             }
         }
