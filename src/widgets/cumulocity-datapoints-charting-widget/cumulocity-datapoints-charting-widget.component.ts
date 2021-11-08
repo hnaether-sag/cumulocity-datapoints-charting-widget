@@ -31,7 +31,6 @@ import { DatePipe } from '@angular/common';
 import * as _ from "lodash";
 import boll from "bollinger-bands";
 import * as moment from "moment";
-import { CumulocityHelper } from './cumulocity-service';
 
 @Component({
     selector: "lib-cumulocity-datapoints-charting-widget",
@@ -110,8 +109,6 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
     measurementHelper: MeasurementHelper;
     @Input() config;
 
-    private c8yHelper: CumulocityHelper;
-
     constructor(
         private measurementService: MeasurementService,
         public datepipe: DatePipe,
@@ -120,7 +117,6 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
         this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //default access through here
         this.measurementHelper = new MeasurementHelper();
         this.seriesData = {};
-        this.c8yHelper = new CumulocityHelper();
     }
 
     /**

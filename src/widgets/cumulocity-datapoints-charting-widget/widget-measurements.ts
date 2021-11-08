@@ -1,6 +1,6 @@
 /** @format */
 
-import _ from "lodash";
+import { has, get, set } from "lodash";
 import boll from "bollinger-bands";
 import { IMeasurement, MeasurementService } from "@c8y/client";
 import * as moment from "moment";
@@ -285,7 +285,7 @@ export class MeasurementHelper {
     }
 
     private async getDataFromC8y(filter: Object, measurementService: MeasurementService, data: any[], maxMeasurements: number) {
-        _.set(filter, "currentPage", 1);
+        set(filter, "currentPage", 1);
         let page = 1;
         let resp = await measurementService.list(filter);
         if (resp.res.status == 200) {
@@ -456,10 +456,10 @@ export class MeasurementHelper {
 
             let measurementValue = 0;
             //need the fragment, series
-            if (_.has(row, options.fragment)) {
-                let frag = _.get(row, options.fragment);
-                if (_.has(frag, options.series)) {
-                    let ser = _.get(frag, options.series);
+            if (has(row, options.fragment)) {
+                let frag = get(row, options.fragment);
+                if (has(frag, options.series)) {
+                    let ser = get(frag, options.series);
                     //if there is a group by we need to either sum or average the
                     //value for the current set of measurements
                     measurementValue = parseFloat(parseFloat(ser.value).toFixed(options.numdp));
@@ -587,7 +587,7 @@ export class MeasurementHelper {
                     // same size as the input - but as labels
                     // simple 1 dim array
                     let mapped = this.categorize(options, val);
-                    if (_.has(result, mapped)) {
+                    if (has(result, mapped)) {
                         result[mapped] = result[mapped] + 1;
                     } else {
                         result[mapped] = 1;
