@@ -12,7 +12,7 @@
  * @format
  */
 
-import * as _ from "lodash";
+import { has, set, get } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { ChartConfig } from "./widget-charts";
 import { MeasurementHelper } from "./widget-measurements";
@@ -57,14 +57,12 @@ export class WidgetHelper<CONFIGTYPE> {
         this.chartRef = new ChartConfig(); //NOT for data
 
         // only set if it doesn't exist
-        if (!_.has(c, "customwidgetdata")) {
+        if (!has(c, "customwidgetdata")) {
             this.config = new ConfigCreator();
-           //console.log("Create new config", this.config);
         } else {
             // because this is stored and retrieved from mongo db
             // reset the prototype and leave the data
-           //console.log("Exists", c);
-            this.config = _.get(c, "customwidgetdata");
+            this.config = get(c, "customwidgetdata");
             if (Object.getPrototypeOf(this.config) !== Object.getPrototypeOf(this.reference)) {
                 Object.setPrototypeOf(this.config, Object.getPrototypeOf(this.reference));
             }
@@ -72,13 +70,10 @@ export class WidgetHelper<CONFIGTYPE> {
     }
 
     getDeviceTarget(): string | undefined {
-        if (_.has(this.rawConfig, "device")) {
-            //console.log("DEVICE");
+        if (has(this.rawConfig, "device")) {
             return this.rawConfig["device"].id;
-        } else if (_.has(this.rawConfig, "settings")) {
-            //console.log("SETTINGS");
-            if (_.has(this.rawConfig["settings"], "context")) {
-                //console.log("CONTEXT");
+        } else if (has(this.rawConfig, "settings")) {
+            if (has(this.rawConfig["settings"], "context")) {
                 return this.rawConfig["settings"]["context"].id;
             }
         }
@@ -101,35 +96,34 @@ export class WidgetHelper<CONFIGTYPE> {
      * @param c config member from the custom widget
      */
     setWidgetConfig(c: any) {
-        _.set(c, "customwidgetdata", this.config);
+        set(c, "customwidgetdata", this.config);
     }
 
     getUniqueID(): string {
-        if (!_.has(this.config, "uuid")) {
-            _.set(this.config, "uuid", uuidv4());
+        if (!has(this.config, "uuid")) {
+            set(this.config as any, "uuid", uuidv4());
         }
-        //console.log(this.config);
-        return _.get(this.config, "uuid");
+        return get(this.config, "uuid");
     }
 
-    /**
+/**
  * If an object exists it will be returned with the correct prototype
  * If it doesn't it will be created and a default returned.
  *
  * @returns Chart config object attached to the general configuration
  */
     getChartConfig(): ChartConfig {
-        let chartConfig: ChartConfig;
-        if (_.has(this.config, "chart")) {
-            chartConfig = _.get(this.config, "chart");
+        if (has(this.config, "chart")) {
+            const chartConfig: ChartConfig = get(this.config, "chart");
             if (Object.getPrototypeOf(chartConfig) !== Object.getPrototypeOf(this.chartRef)) {
                 Object.setPrototypeOf(chartConfig, Object.getPrototypeOf(this.chartRef));
             }
+            return chartConfig;
         } else {
             //add new ? or perhaps throw if we get more serious
-            chartConfig = _.set(this.config, "chart", new ChartConfig());
+            const cfg = set(this.config as any, "chart", new ChartConfig());
+            return cfg.chart;
         }
-        return chartConfig;
     }
 
     getMeasurements(): MeasurementHelper {
