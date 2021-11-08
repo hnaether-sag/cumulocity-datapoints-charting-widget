@@ -51,7 +51,7 @@ export class WidgetHelper<CONFIGTYPE> {
    * @param c is the configuration member supplied by default
    * @param ConfigCreator The type of the Custom Widget Class
    */
-  constructor(c: Object, ConfigCreator: new () => CONFIGTYPE) {
+  constructor(c: any, ConfigCreator: new () => CONFIGTYPE) {
     this.rawConfig = c;
     this.reference = new ConfigCreator(); //template
     this.chartRef = new ChartConfig(); //NOT for data
@@ -95,7 +95,7 @@ export class WidgetHelper<CONFIGTYPE> {
    *
    * @param c config member from the custom widget
    */
-  setWidgetConfig(c: any) {
+  setWidgetConfig(c: any): void {
     set(c, 'customwidgetdata', this.config);
   }
 
@@ -121,7 +121,7 @@ export class WidgetHelper<CONFIGTYPE> {
       return chartConfig;
     } else {
       //add new ? or perhaps throw if we get more serious
-      const cfg = set(this.config, 'chart', new ChartConfig());
+      const cfg = set(this.config as any, 'chart', new ChartConfig());
       return cfg.chart;
     }
   }

@@ -216,9 +216,7 @@ export class ChartConfig {
   series: { [key: string]: ChartSeries } = {};
   useCache = true;
 
-  constructor() {}
-
-  getChartType() {
+  getChartType(): string {
     if (this.type == 'spline') {
       return 'line';
     }
@@ -245,7 +243,7 @@ export class ChartConfig {
    *
    * @returns true if series exist
    */
-  hasSeries() {
+  hasSeries(): boolean {
     return Object.keys(this.series).length > 0;
   }
 
@@ -255,7 +253,7 @@ export class ChartConfig {
    *
    * @param l is the current list of series held
    */
-  clearSeries(l: RawListItem[]) {
+  clearSeries(l: RawListItem[]): void {
     if (Object.keys(this.series).length > 0) {
       const temp = this.series;
       this.series = {};
@@ -290,7 +288,7 @@ export class ChartConfig {
     altColor: string,
     memberOf = 'default',
     isParent = false
-  ) {
+  ): void {
     if (!isParent) {
       if (!has(this.series, devices[0])) {
         this.series[devices[0]] = new ChartSeries(devices, seriesName, seriesColor, altColor, memberOf, isParent);

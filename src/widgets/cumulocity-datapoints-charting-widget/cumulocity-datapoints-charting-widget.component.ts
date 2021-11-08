@@ -58,6 +58,7 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
    * subscribed and so must be released on destroy
    */
   seriesData: { [key: string]: MeasurementList };
+  // eslint-disable-next-line @typescript-eslint/ban-types
   subscription: { [key: string]: Object } = {}; //record per device subscriptions
 
   /**
@@ -738,7 +739,7 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
     //
     // We have all the data, now we create the actual displayed data
     //
-    const thisSeries: ChartDataSets = this.createSeries(seriesList['x'], seriesName, config.multivariateColor);
+    const thisSeries: ChartDataSets = this.createSeries(seriesName, config.multivariateColor);
 
     //x/y series (!!Date Order!!) - make sure x/y values match timestamps
     let result: ChartPoint[] = [];
@@ -925,7 +926,6 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
     if (!config.series[key].isParent || config.groupbyGroup) {
       if (config.series[key].hideMeasurements !== true) {
         const thisSeries: ChartDataSets = this.createSeries(
-          key,
           config.series[key].name,
           this.widgetHelper.getWidgetConfig().chart.series[key].color
         );
@@ -946,7 +946,6 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
       if (config.series[key].avgType !== 'None') {
         if (config.series[key].avgType.indexOf('Moving Average') > -1) {
           const aggregateSeries: ChartDataSets = this.createSeries(
-            key,
             `${options.name} - ${config.series[key].avgPeriod} period`,
             this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
           );
@@ -957,7 +956,6 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
 
         if (config.series[key].avgType.indexOf('Bollinger Bands') > -1) {
           const upperBoll: ChartDataSets = this.createSeries(
-            key,
             `${options.name} - upper Bollinger Band`,
             this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
           );
@@ -967,7 +965,6 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
           localChartData.push(upperBoll);
 
           const lowerBoll: ChartDataSets = this.createSeries(
-            key,
             `${options.name} - lower Bollinger Band`,
             this.widgetHelper.getWidgetConfig().chart.series[key].avgColor
           );
@@ -987,13 +984,13 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
     }
   }
 
-  async handleTimer(parent: CumulocityDatapointsChartingWidget) {
+  handleTimer(parent: CumulocityDatapointsChartingWidget): void {
     const localChartData: ChartDataSets[] = []; //build list locally because empty dataset is added by framework
     parent.retrieveAndPlotMultivariateChart(localChartData);
     parent.chartData = localChartData;
   }
 
-  async refresh() {
+  async refresh(): Promise<void> {
     const localChartData: ChartDataSets[] = []; //build list locally because empty dataset is added by framework
     const config = this.widgetHelper.getChartConfig();
     /**
@@ -1074,7 +1071,7 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
         const seriesName = groups[index];
         const seriesConfig = config.series[seriesName];
         //each series (aggregates and functions of raw data too) gets this
-        const options: MeasurementOptions = new MeasurementOptions(
+        const options = new MeasurementOptions(
           config.series[seriesName].avgPeriod,
           config.getChartType(),
           config.numdp,
@@ -1119,14 +1116,16 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
   // helper
   private setAxesLabels(xLabelKey: string, yLabelKey: string) {
     const config = this.widgetHelper.getChartConfig();
-    if (this.chartOptions.scales.xAxes.length > 0) {
-      this.chartOptions.scales.xAxes[0].scaleLabel = {
+    const xAxes = this.chartOptions.scales.xAxes;
+    if (xAxes.length) {
+      xAxes[0].scaleLabel = {
         display: config.showAxesLabels,
         labelString: config.series[xLabelKey].name,
       };
     }
-    if (this.chartOptions.scales.yAxes.length > 0) {
-      this.chartOptions.scales.yAxes[0].scaleLabel = {
+    const yAxes = this.chartOptions.scales.yAxes;
+    if (yAxes.length) {
+      yAxes[0].scaleLabel = {
         display: config.showAxesLabels,
         labelString: config.series[yLabelKey].name,
       };
@@ -1137,12 +1136,11 @@ export class CumulocityDatapointsChartingWidget implements OnDestroy, OnInit {
    * This method returns a default line/bar dataset which can then have
    * data added - no labels are set on this as a default so that they are retrieved
    * from the data points themselves. data is co-ordinate pair {x,y}
-   * @param key
    * @param label
    * @param col
    * @returns
    */
-  createSeries(key: string, label: string, col: string): ChartDataSets {
+  createSeries(label: string, col: string): ChartDataSets {
     const config = this.widgetHelper.getChartConfig();
     const series: ChartDataSets = {
       data: [],

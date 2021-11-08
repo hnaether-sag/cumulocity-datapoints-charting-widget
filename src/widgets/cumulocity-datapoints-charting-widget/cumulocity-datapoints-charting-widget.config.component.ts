@@ -47,9 +47,6 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
   public rawDevices: BehaviorSubject<RawListItem[]>;
   public supportedSeries: BehaviorSubject<RawListItem[]>;
 
-  //rawDevices: RawListItem[];
-  //supportedSeries: RawListItem[];
-
   selectedSeries: string;
 
   /**
@@ -76,30 +73,33 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     this.widgetHelper = new WidgetHelper(this.config, WidgetConfig); //use config
 
     if (this.widgetHelper.getDeviceTarget()) {
-      const { data, res } = await this.getDeviceDetail(this.widgetHelper.getDeviceTarget());
-      if (res.status >= 200 && res.status < 300) {
-        const v: RawListItem = { id: data.id, text: data.name, isGroup: data.hasOwnProperty('c8y_IsDeviceGroup') };
-        this.widgetHelper.getWidgetConfig().selectedDevices = [v];
-      } else {
-        this.alertService.danger(`There was an issue getting device details, please refresh the page.`);
-        return;
-      }
+      this.getDeviceDetail(this.widgetHelper.getDeviceTarget()).then(
+        (result) => {
+          const data = result.data;
+          const v: RawListItem = { id: data.id, text: data.name, isGroup: data.hasOwnProperty('c8y_IsDeviceGroup') };
+          this.widgetHelper.getWidgetConfig().selectedDevices = [v];
+          this.updateConfig();
+        },
+        () => {
+          this.alertService.danger(`There was an issue getting device details, please refresh the page.`);
+        }
+      );
     } else {
       //set the devices observable for the config form
-      const deviceList = await this.getDevicesAndGroups();
-      this.rawDevices.next(
-        deviceList
-          .map((item) => {
-            const v: RawListItem = { id: item.id, text: item.name, isGroup: item.isGroup };
-            return v;
-          })
-          .filter((item) => {
-            return item.text !== undefined;
-          })
-      );
+      this.getDevicesAndGroups()
+        .then((deviceList) =>
+          deviceList
+            .map((item) => {
+              const v: RawListItem = { id: item.id, text: item.name, isGroup: item.isGroup };
+              return v;
+            })
+            .filter((item) => item.text !== undefined)
+        )
+        .then((rawListItems) => {
+          this.rawDevices.next(rawListItems);
+          this.updateConfig();
+        });
     }
-
-    this.updateConfig();
   }
 
   ngOnDestroy(): void {
@@ -117,7 +117,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
   // Helper methods
   //
   async getDeviceList(): Promise<IResultList<IManagedObject>> {
-    const filter: object = {
+    const filter = {
       pageSize: 2000,
       withTotalPages: true,
     };
@@ -126,14 +126,13 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
       name: '*',
     };
 
-    //const { data, res, paging } = await
     return this.inventory.listQueryDevices(query, filter);
   }
 
   async getDevicesAndGroups(): Promise<IManagedObject[]> {
     const retrieved: IManagedObject[] = [];
 
-    const filter2: object = {
+    const filter2 = {
       pageSize: 2000,
       withTotalPages: true,
       query:
@@ -175,9 +174,13 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
   }
 
   async fetchSeries(id: string | number): Promise<string[]> {
-    const resp: IFetchResponse = await this.fetchclient.fetch('/inventory/managedObjects/' + id + '/supportedSeries');
-    const body = await resp.json();
-    return body.c8y_SupportedSeries;
+    try {
+      const resp: IFetchResponse = await this.fetchclient.fetch('/inventory/managedObjects/' + id + '/supportedSeries');
+      const body = await resp.json();
+      return body.c8y_SupportedSeries || [];
+    } catch (e) {
+      return [];
+    }
   }
 
   /**
@@ -209,7 +212,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     const retrieved: IManagedObject[] = []; //could be empty.
 
     //get the 3 types of children for the node at id.
-    const childFilter: object = {
+    const childFilter = {
       pageSize: 2000,
       withTotalPages: true,
       query: '(not(has(c8y_Dashboard)))',
@@ -273,46 +276,48 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
    */
   async getSupportedSeries(devices: RawListItem[]): Promise<RawListItem[]> {
     let local: RawListItem[] = [];
-    if (devices) {
-      for (let index = 0; index < devices.length; index++) {
-        const dev: RawListItem = devices[index];
-        //is it a group
-        if (dev.isGroup) {
-          //get the child devices and generate the list of ids to process
-          const actualDevices = await this.getDevicesForGroup(dev.id);
+    if (!devices) {
+      return local;
+    }
+    for (let index = 0; index < devices.length; index++) {
+      const dev = devices[index];
+      //is it a group
+      if (dev.isGroup) {
+        //get the child devices and generate the list of ids to process
+        const actualDevices = await this.getDevicesForGroup(dev.id);
 
-          for (let index = 0; index < actualDevices.length; index++) {
-            const device = actualDevices[index];
-            const current: RawListItem[] = (await this.fetchSeries(device.id)).map((m) => {
-              return {
-                id: device.id + '.' + m,
-                text: `${m}(${dev.text}/${device.name})`,
-                isGroup: true,
-                groupname: dev.text,
-              };
-            });
-            local = [...local, ...current];
-          }
-        } else {
-          const current: RawListItem[] = (await this.fetchSeries(dev.id)).map((m) => {
+        for (let index = 0; index < actualDevices.length; index++) {
+          const device = actualDevices[index];
+          const current: RawListItem[] = (await this.fetchSeries(device.id)).map((m) => {
             return {
-              id: dev.id + '.' + m,
-              text: `${m}(${dev.text})`,
-              isGroup: false,
-              groupname: 'default',
+              id: device.id + '.' + m,
+              text: `${m}(${dev.text}/${device.name})`,
+              isGroup: true,
+              groupname: dev.text,
             };
           });
           local = [...local, ...current];
         }
+      } else {
+        const current: RawListItem[] = (await this.fetchSeries(dev.id)).map((m) => {
+          return {
+            id: dev.id + '.' + m,
+            text: `${m}(${dev.text})`,
+            isGroup: false,
+            groupname: 'default',
+          };
+        });
+        local = [...local, ...current];
       }
     }
+
     return local;
   }
 
   /**
    * respond to changes in options, record in config
    */
-  async updateSelectedMeasurements() {
+  updateSelectedMeasurements(): void {
     const config = this.widgetHelper.getChartConfig();
     const selectedMeasurements = this.widgetHelper.getWidgetConfig().selectedMeasurements;
     config.clearSeries(selectedMeasurements);
@@ -337,7 +342,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     });
   }
 
-  showSection(id: string) {
+  showSection(id: string): void {
     if (this.selectedSeries === id) {
       this.selectedSeries = '';
     } else {
@@ -345,15 +350,15 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     }
   }
 
-  async clearCache() {
+  clearCache(): Promise<void> {
     const dbName = 'cumulocity-datapoints-charting-widget-db';
-    await deleteDB(dbName, { blocked: () => console.log(`Waiting to Removing DB ${dbName}`) });
+    return deleteDB(dbName, { blocked: () => console.log(`Waiting to Removing DB ${dbName}`) });
   }
 
   /**
    * respond to changes in options, record in config
    */
-  async updateConfig() {
+  updateConfig(): void {
     const conf = this.widgetHelper.getWidgetConfig();
     conf.changed = true;
     const config = this.widgetHelper.getChartConfig();
@@ -374,7 +379,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         }
       }
 
-      this.supportedSeries.next(await this.getSupportedSeries(conf.selectedDevices));
+      this.getSupportedSeries(conf.selectedDevices).then((series) => this.supportedSeries.next(series));
     }
 
     //Formats

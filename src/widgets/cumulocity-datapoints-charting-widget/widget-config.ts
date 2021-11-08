@@ -74,7 +74,7 @@ export class MeasurementOptions {
     timeBucket: boolean,
     bucketPeriod: string,
     labelDateFormat: string
-  ) {
+  ): void {
     this.deviceId = deviceId;
     this.name = name;
     this.fragment = fragment;
@@ -93,7 +93,7 @@ export class MeasurementOptions {
     this.labelDateFormat = labelDateFormat;
   }
 
-  public filter(): Object {
+  public filter(): Record<string, unknown> {
     const filter = {};
     set(filter, 'source', this.deviceId);
     set(filter, 'valueFragmentType', this.fragment);

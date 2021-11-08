@@ -64,7 +64,7 @@ export class MeasurementList {
     }
   }
 
-  append(ml: MeasurementList) {
+  append(ml: MeasurementList): void {
     this.sourceCriteria = ml.sourceCriteria;
     this.upper = [...this.upper, ...ml.upper];
     this.aggregate = [...this.aggregate, ...ml.aggregate];
@@ -289,7 +289,7 @@ export class MeasurementHelper {
   }
 
   private async getDataFromC8y(
-    filter: object,
+    filter: Record<string, unknown>,
     measurementService: MeasurementService,
     data: IMeasurement[],
     maxMeasurements: number
