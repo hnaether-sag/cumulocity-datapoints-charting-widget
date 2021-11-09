@@ -75,7 +75,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         if (this.widgetHelper.getDeviceTarget()) {
             let { data, res } = await this.getDeviceDetail(this.widgetHelper.getDeviceTarget());
             if (res.status >= 200 && res.status < 300) {
-                let v: RawListItem = { id: data.id, text: data.name, isGroup: data.hasOwnProperty('c8y_IsDeviceGroup') };
+                let v: RawListItem = { id: data.id, text: data.name, isGroup: has(data, 'c8y_IsDeviceGroup') };
                 this.widgetHelper.getWidgetConfig().selectedDevices = [v];
             } else {
                 this.alertService.danger(`There was an issue getting device details, please refresh the page.`);
@@ -358,9 +358,9 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
     async updateConfig() {
         let conf = this.widgetHelper.getWidgetConfig();
         conf.changed = true;
-        let config = this.widgetHelper.getChartConfig();
+        let chartConfig = this.widgetHelper.getChartConfig();
         // get the list of possible fragments
-        if (config && conf.selectedDevices && conf.selectedDevices.length > 0) {
+        if (chartConfig && conf.selectedDevices && conf.selectedDevices.length) {
             let checklist = new Set([]);
 
             for (let index = 0; index < conf.selectedDevices.length; index++) {
@@ -368,7 +368,7 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
             }
 
             let newSelected: RawListItem[] = [];
-            if (conf.selectedMeasurements && conf.selectedMeasurements.length > 0) {
+            if (conf.selectedMeasurements && conf.selectedMeasurements.length) {
                 for (let index = 0; index < conf.selectedMeasurements.length; index++) {
                     if (checklist.has(conf.selectedMeasurements[index].id.toString().split(".")[0])) {
                         newSelected.push(conf.selectedMeasurements[index]);
@@ -380,31 +380,31 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
         }
 
         //Formats
-        const rangeUnit = config.rangeUnits[config.timeFormatType];
-        let fmt = get(config.rangeDisplay, rangeUnit.text);
-        if (config.customFormat) {
-            fmt = config.customFormatString;
+        const rangeUnit = chartConfig.rangeUnits[chartConfig.timeFormatType];
+        let fmt = get(chartConfig.rangeDisplay, rangeUnit.text);
+        if (chartConfig.customFormat) {
+            fmt = chartConfig.customFormatString;
             //store custom in list
-            set(config.rangeDisplay, rangeUnit.text, fmt);
+            set(chartConfig.rangeDisplay, rangeUnit.text, fmt);
         }
-        config.dateExample = moment().format(fmt);
-        const chartType = config.getChartType();
+        chartConfig.dateExample = moment().format(fmt);
+        const chartType = chartConfig.getChartType();
         //Some charts need certain defaults
-        if (config.multivariateplot === true) {
+        if (chartConfig.multivariateplot) {
             if (chartType !== "radar") {
-                config.groupby = true;
+                chartConfig.groupby = true;
             }
-            config.realtime = "timer";
+            chartConfig.realtime = "timer";
         } else {
-            config.realtime = "realtime";
+            chartConfig.realtime = "realtime";
         }
 
         //Some charts need certain defaults
         if (
             (chartType === "scatter" || chartType === "bubble") &&
-            config.showPoints == 0
+            chartConfig.showPoints == 0
         ) {
-            config.showPoints = 4;
+            chartConfig.showPoints = 4;
         }
 
         //Bar and horizontalBar should be time based
@@ -414,10 +414,8 @@ export class CumulocityDatapointsChartingWidgetConfig implements OnInit, OnDestr
             chartType === "pie" ||
             chartType === "doughnut"
         ) {
-            config.multivariateplot = false;
+            chartConfig.multivariateplot = false;
         }
         this.widgetHelper.setWidgetConfig(this.config);
     }
-
-
 }
